@@ -1,0 +1,138 @@
+name: API test pipeline
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 3 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+  API_BASE_URL: https://petstore.swagger.io/v2
+  API_IGNORE_HTTPS_ERRORS: 'false'
+  API_LOG_LEVEL: none
+
+concurrency:
+  group: api-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    name: Validate project
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run unit tests when configured
+        run: npm run --if-present test:unit
+
+  smoke:
+    name: PR smoke - ${{ matrix.runner }}
+    if: github.event_name == 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [playwright, cucumber]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run Playwright smoke tests
+        if: matrix.runner == 'playwright'
+        run: npm run test:smoke
+
+      - name: Run Cucumber smoke tests
+        if: matrix.runner == 'cucumber'
+        run: npm run bdd:smoke
+
+      - name: Upload smoke reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-smoke-${{ matrix.runner }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+            reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+  regression:
+    name: Regression - ${{ matrix.runner }}
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [playwright, cucumber]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run Playwright regression tests
+        if: matrix.runner == 'playwright'
+        run: npm run test:regression
+
+      - name: Run Cucumber regression tests
+        if: matrix.runner == 'cucumber'
+        run: npm run bdd:regression
+
+      - name: Upload regression reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-regression-${{ matrix.runner }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+            reports/
+          if-no-files-found: warn
+          retention-days: 30

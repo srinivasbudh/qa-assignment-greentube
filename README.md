@@ -191,6 +191,20 @@ Status, header, and body assertions
 - `tests/` contains direct Playwright tests.
 - `features/`, `step-definitions/`, and `support/` provide executable BDD coverage.
 
+## Continuous Integration
+
+`.github/workflows/api-tests.yml` provides the API test pipeline:
+
+- Pull requests run Playwright and Cucumber smoke tests.
+- A weekday schedule at 03:00 UTC runs both regression suites.
+- `workflow_dispatch` allows a full regression run on demand.
+- Node.js dependencies are cached using `package-lock.json`.
+- TypeScript validation runs before test jobs.
+- A unit-test step runs automatically when a `test:unit` script is added.
+- Playwright and Cucumber reports are uploaded even when tests fail.
+
+The smoke and regression runners use separate matrix jobs, so a failure in one framework does not prevent the other framework from executing.
+
 ## Generated and Local Files
 
 The following are intentionally excluded by `.gitignore` and should not be committed:

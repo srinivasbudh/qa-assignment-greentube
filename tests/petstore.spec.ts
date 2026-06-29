@@ -2,7 +2,6 @@
 import { PetApiClient } from '../helpers/PetApiClient';
 import { createTestDataGenerator } from '../test-data/dataGenerator';
 import { buildInvalidPetPayload, buildPet, buildUpdatedPet } from '../test-data/petFactory';
-import { ApiError, Pet } from '../utils/petTypes';
 
 test.describe('Swagger Petstore pet API', () => {
   /** Verifies that create, read, and update operations preserve pet state. */
@@ -13,23 +12,23 @@ test.describe('Swagger Petstore pet API', () => {
 
     const postResponse = await api.createPet(createdPet);
     await api.expectJsonResponse(postResponse, 200);
-    const postBody = await api.responseBody<Pet>(postResponse);
+    const postBody = await api.petResponseBody(postResponse);
     expect(postBody).toMatchObject(createdPet);
 
     const getResponse = await api.readPet(createdPet.id);
     await api.expectJsonResponse(getResponse, 200);
-    const getBody = await api.responseBody<Pet>(getResponse);
+    const getBody = await api.petResponseBody(getResponse);
     expect(getBody).toMatchObject(postBody);
 
     const updatedPet = buildUpdatedPet(createdPet, {}, data);
     const putResponse = await api.updatePet(updatedPet);
     await api.expectJsonResponse(putResponse, 200);
-    const putBody = await api.responseBody<Pet>(putResponse);
+    const putBody = await api.petResponseBody(putResponse);
     expect(putBody).toMatchObject(updatedPet);
 
     const getUpdatedResponse = await api.readPet(createdPet.id);
     await api.expectJsonResponse(getUpdatedResponse, 200);
-    const getUpdatedBody = await api.responseBody<Pet>(getUpdatedResponse);
+    const getUpdatedBody = await api.petResponseBody(getUpdatedResponse);
     expect(getUpdatedBody).toMatchObject(putBody);
 
     await api.deletePet(createdPet.id);
@@ -43,10 +42,11 @@ test.describe('Swagger Petstore pet API', () => {
     await api.createPet(pet);
     const deleteResponse = await api.deletePet(pet.id);
     await api.expectJsonResponse(deleteResponse, 200);
+    await api.apiErrorResponseBody(deleteResponse);
 
     const deletedReadResponse = await api.readPet(pet.id);
     await api.expectJsonResponse(deletedReadResponse, 404);
-    const body = await api.responseBody<ApiError>(deletedReadResponse);
+    const body = await api.apiErrorResponseBody(deletedReadResponse);
     expect(body.message).toContain('Pet not found');
   });
 
@@ -56,7 +56,7 @@ test.describe('Swagger Petstore pet API', () => {
     const response = await api.readPet('invalid-id');
 
     await api.expectJsonResponse(response, 404);
-    const body = await api.responseBody<ApiError>(response);
+    const body = await api.apiErrorResponseBody(response);
     expect(body.message).toBeTruthy();
   });
 
@@ -68,6 +68,7 @@ test.describe('Swagger Petstore pet API', () => {
     // The public sandbox is inconsistent for malformed payloads.
     expect([400, 405, 500]).toContain(response.status());
     expect(response.headers()['content-type']).toContain('application/json');
+    await api.apiErrorResponseBody(response);
   });
 
   /** Verifies that a create request without a body is rejected. */
@@ -77,6 +78,7 @@ test.describe('Swagger Petstore pet API', () => {
 
     expect([400, 405, 415, 500]).toContain(response.status());
     expect(response.headers()['content-type']).toContain('application/json');
+    await api.apiErrorResponseBody(response);
   });
 
   /** Verifies error handling for an unsupported HTTP method. */

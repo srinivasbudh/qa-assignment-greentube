@@ -2,7 +2,6 @@
 import { expect } from '@playwright/test';
 import { ApiWorld } from '../support/world';
 import { buildInvalidPetPayload, buildPet, buildUpdatedPet } from '../test-data/petFactory';
-import { ApiError, Pet } from '../utils/petTypes';
 
 /** Creates a pet and saves its response in scenario state. */
 Given('I create a new pet with dynamic data', async function (this: ApiWorld) {
@@ -52,9 +51,9 @@ When('I call an unsupported method for a pet', async function (this: ApiWorld) {
 
 /** Compares create, read, and update responses for data consistency. */
 Then('the created, read, and updated pet responses should be consistent', async function (this: ApiWorld) {
-  const createdPet = await this.petApi.responseBody<Pet>(this.createdResponse!);
-  const readPet = await this.petApi.responseBody<Pet>(this.readResponse!);
-  const updatedPet = await this.petApi.responseBody<Pet>(this.updatedResponse!);
+  const createdPet = await this.petApi.petResponseBody(this.createdResponse!);
+  const readPet = await this.petApi.petResponseBody(this.readResponse!);
+  const updatedPet = await this.petApi.petResponseBody(this.updatedResponse!);
 
   expect(readPet).toMatchObject(createdPet);
   expect(updatedPet).toMatchObject(this.currentPet!);
@@ -66,7 +65,7 @@ Then('the created, read, and updated pet responses should be consistent', async 
 Then('reading the deleted pet should return not found', async function (this: ApiWorld) {
   const response = await this.petApi.readPet(this.currentPet!.id);
   await this.petApi.expectJsonResponse(response, 404);
-  const body = await this.petApi.responseBody<ApiError>(response);
+  const body = await this.petApi.apiErrorResponseBody(response);
   expect(body.message).toContain('Pet not found');
 });
 
@@ -74,12 +73,14 @@ Then('reading the deleted pet should return not found', async function (this: Ap
 Then('the API should return an error response', async function (this: ApiWorld) {
   expect([400, 404]).toContain(this.latestResponse!.status());
   expect(this.latestResponse!.headers()['content-type']).toContain('application/json');
+  await this.petApi.apiErrorResponseBody(this.latestResponse!);
 });
 
 /** Confirms that the latest malformed request was rejected. */
 Then('the API should return a request validation error', async function (this: ApiWorld) {
   expect([400, 405, 415, 500]).toContain(this.latestResponse!.status());
   expect(this.latestResponse!.headers()['content-type']).toContain('application/json');
+  await this.petApi.apiErrorResponseBody(this.latestResponse!);
 });
 
 /** Confirms that the unsupported operation returned an expected error. */

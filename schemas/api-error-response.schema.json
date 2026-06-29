@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "API error response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "type", "message"],
+  "properties": {
+    "code": {
+      "type": "integer"
+    },
+    "type": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

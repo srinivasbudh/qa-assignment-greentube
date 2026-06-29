@@ -1,6 +1,9 @@
 import { APIRequestContext, APIResponse, expect } from '@playwright/test';
+import apiErrorResponseSchema from '../schemas/api-error-response.schema.json';
+import petResponseSchema from '../schemas/pet-response.schema.json';
 import { ApiLogger } from '../utils/apiLogger';
-import { Pet } from '../utils/petTypes';
+import { ApiError, Pet } from '../utils/petTypes';
+import { validateSchema } from '../utils/schemaValidator';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -68,8 +71,15 @@ export class PetApiClient {
     expect(response.headers()['content-type']).toContain('application/json');
   }
 
-  /** Parses a JSON response using the caller's expected body type. */
-  async responseBody<T>(response: APIResponse): Promise<T> {
-    return response.json() as Promise<T>;
+  /** Parses and validates a successful response against the Pet schema. */
+  async petResponseBody(response: APIResponse): Promise<Pet> {
+    const body: unknown = await response.json();
+    return validateSchema<Pet>('Pet response', petResponseSchema, body);
+  }
+
+  /** Parses and validates an error response against the API error schema. */
+  async apiErrorResponseBody(response: APIResponse): Promise<ApiError> {
+    const body: unknown = await response.json();
+    return validateSchema<ApiError>('API error response', apiErrorResponseSchema, body);
   }
 }

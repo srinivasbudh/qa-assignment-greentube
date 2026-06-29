@@ -22,9 +22,13 @@ qa-assignment/
 │   └── env.ts
 ├── helpers/
 │   └── PetApiClient.ts
+├── schemas/
+│   ├── api-error-response.schema.json
+│   └── pet-response.schema.json
 ├── utils/
 │   ├── apiLogger.ts
-│   └── petTypes.ts
+│   ├── petTypes.ts
+│   └── schemaValidator.ts
 ├── test-data/
 │   ├── dataGenerator.ts
 │   └── petFactory.ts
@@ -67,6 +71,7 @@ The automated suite tests the Swagger Petstore pet endpoints through Playwright'
 - Invalid request body
 - Missing request body
 - Unsupported HTTP method
+- Runtime response-schema validation
 
 ## Prerequisites
 
@@ -168,8 +173,10 @@ Status, header, and body assertions
 
 - `config/env.ts` loads and validates environment configuration.
 - `helpers/PetApiClient.ts` centralizes endpoint calls and common assertions.
+- `schemas/` defines the expected successful and error response contracts.
 - `test-data/` creates dynamic valid and invalid payloads.
 - `utils/apiLogger.ts` provides masked request/response logging.
+- `utils/schemaValidator.ts` uses AJV to validate actual JSON responses at runtime.
 - `tests/` contains direct Playwright tests.
 - `features/`, `step-definitions/`, and `support/` provide executable BDD coverage.
 

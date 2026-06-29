@@ -9,5 +9,5 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["config/**/*.ts", "helpers/**/*.ts", "test-data/**/*.ts", "tests/**/*.ts", "utils/**/*.ts", "step-definitions/**/*.ts", "support/**/*.ts"]
+  "include": ["config/**/*.ts", "helpers/**/*.ts", "schemas/**/*.json", "test-data/**/*.ts", "tests/**/*.ts", "utils/**/*.ts", "step-definitions/**/*.ts", "support/**/*.ts"]
 }

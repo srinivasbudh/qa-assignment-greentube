@@ -17,7 +17,7 @@ export type Pet = {
 };
 
 export type ApiError = {
-  code?: number;
-  type?: string;
-  message?: string;
+  code: number;
+  type: string;
+  message: string;
 };

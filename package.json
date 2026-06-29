@@ -1,0 +1,24 @@
+{
+  "name": "petstore-api-automation",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:quiet": "node scripts/run-with-log-level.js none playwright test",
+    "test:summary": "node scripts/run-with-log-level.js summary playwright test",
+    "test:verbose": "node scripts/run-with-log-level.js body playwright test",
+    "bdd": "cucumber-js",
+    "bdd:quiet": "node scripts/run-with-log-level.js none cucumber-js",
+    "bdd:summary": "node scripts/run-with-log-level.js summary cucumber-js",
+    "bdd:verbose": "node scripts/run-with-log-level.js body cucumber-js",
+    "typecheck": "tsc --noEmit",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@cucumber/cucumber": "^11.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}

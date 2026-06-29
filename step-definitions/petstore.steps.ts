@@ -69,22 +69,25 @@ Then('reading the deleted pet should return not found', async function (this: Ap
   expect(body.message).toContain('Pet not found');
 });
 
-/** Confirms that the latest request produced a JSON client error. */
+/** Confirms the exact not-found response for an invalid path ID. */
 Then('the API should return an error response', async function (this: ApiWorld) {
-  expect([400, 404]).toContain(this.latestResponse!.status());
-  expect(this.latestResponse!.headers()['content-type']).toContain('application/json');
+  await this.petApi.expectJsonResponse(this.latestResponse!, 404);
   await this.petApi.apiErrorResponseBody(this.latestResponse!);
 });
 
-/** Confirms that the latest malformed request was rejected. */
+/** Documents the public sandbox's exact malformed-body defect. */
+Then('the public sandbox should return its known server error', async function (this: ApiWorld) {
+  await this.petApi.expectJsonResponse(this.latestResponse!, 500);
+  await this.petApi.apiErrorResponseBody(this.latestResponse!);
+});
+
+/** Confirms the exact missing-body validation response. */
 Then('the API should return a request validation error', async function (this: ApiWorld) {
-  expect([400, 405, 415, 500]).toContain(this.latestResponse!.status());
-  expect(this.latestResponse!.headers()['content-type']).toContain('application/json');
+  await this.petApi.expectJsonResponse(this.latestResponse!, 405);
   await this.petApi.apiErrorResponseBody(this.latestResponse!);
 });
 
-/** Confirms that the unsupported operation returned an expected error. */
+/** Confirms the exact unsupported-method response. */
 Then('the API should return a method or validation error', async function (this: ApiWorld) {
-  expect([400, 404, 405]).toContain(this.latestResponse!.status());
+  await this.petApi.expectJsonResponse(this.latestResponse!, 405);
 });
-

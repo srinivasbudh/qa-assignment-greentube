@@ -5,7 +5,9 @@ import { buildInvalidPetPayload, buildPet, buildUpdatedPet } from '../test-data/
 
 test.describe('Swagger Petstore pet API', () => {
   /** Verifies that create, read, and update operations preserve pet state. */
-  test('POST -> GET -> PUT preserves consistent pet data', async ({ request }) => {
+  test('POST -> GET -> PUT preserves consistent pet data', {
+    tag: ['@smoke', '@regression']
+  }, async ({ request }) => {
     const api = new PetApiClient(request);
     const data = createTestDataGenerator();
     const createdPet = buildPet({}, data);
@@ -35,7 +37,9 @@ test.describe('Swagger Petstore pet API', () => {
   });
 
   /** Verifies that a deleted pet can no longer be retrieved. */
-  test('DELETE removes pet and subsequent read returns not found', async ({ request }) => {
+  test('DELETE removes pet and subsequent read returns not found', {
+    tag: '@regression'
+  }, async ({ request }) => {
     const api = new PetApiClient(request);
     const pet = buildPet();
 
@@ -51,7 +55,9 @@ test.describe('Swagger Petstore pet API', () => {
   });
 
   /** Verifies validation behavior for a non-numeric path ID. */
-  test('GET with invalid ID returns validation error', async ({ request }) => {
+  test('GET with invalid ID returns not found', {
+    tag: '@regression'
+  }, async ({ request }) => {
     const api = new PetApiClient(request);
     const response = await api.readPet('invalid-id');
 
@@ -60,33 +66,35 @@ test.describe('Swagger Petstore pet API', () => {
     expect(body.message).toBeTruthy();
   });
 
-  /** Verifies that malformed field types do not create a valid pet. */
-  test('POST with invalid request body is rejected or normalized by API contract', async ({ request }) => {
+  /** Documents the public sandbox's exact malformed-body defect. */
+  test('POST with invalid request body returns the known sandbox server error', {
+    tag: '@regression'
+  }, async ({ request }) => {
     const api = new PetApiClient(request);
     const response = await api.createInvalidPet(buildInvalidPetPayload());
 
-    // The public sandbox is inconsistent for malformed payloads.
-    expect([400, 405, 500]).toContain(response.status());
-    expect(response.headers()['content-type']).toContain('application/json');
+    await api.expectJsonResponse(response, 500);
     await api.apiErrorResponseBody(response);
   });
 
   /** Verifies that a create request without a body is rejected. */
-  test('POST with missing request body is rejected if supported by service', async ({ request }) => {
+  test('POST with missing request body returns method not allowed', {
+    tag: '@regression'
+  }, async ({ request }) => {
     const api = new PetApiClient(request);
     const response = await api.createPetWithoutBody();
 
-    expect([400, 405, 415, 500]).toContain(response.status());
-    expect(response.headers()['content-type']).toContain('application/json');
+    await api.expectJsonResponse(response, 405);
     await api.apiErrorResponseBody(response);
   });
 
   /** Verifies error handling for an unsupported HTTP method. */
-  test('Unsupported HTTP method returns method or validation error', async ({ request }) => {
+  test('Unsupported HTTP method returns method not allowed', {
+    tag: '@regression'
+  }, async ({ request }) => {
     const api = new PetApiClient(request);
     const response = await api.invalidMethodOnPet(123456789);
 
-    expect([400, 404, 405]).toContain(response.status());
+    await api.expectJsonResponse(response, 405);
   });
 });
-

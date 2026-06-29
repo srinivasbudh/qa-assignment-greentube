@@ -75,7 +75,7 @@ The automated suite tests the Swagger Petstore pet endpoints through Playwright'
 
 ## Prerequisites
 
-- Node.js 18 or newer.
+- Node.js 22 or newer (required by Cucumber 13).
 - npm.
 - Network access to the configured API environment.
 
@@ -145,6 +145,17 @@ npm run bdd:quiet
 npm run bdd:summary
 npm run bdd:verbose
 ```
+
+Tagged execution:
+
+```bash
+npm run test:smoke
+npm run test:regression
+npm run bdd:smoke
+npm run bdd:regression
+```
+
+`@smoke` covers the critical create/read/update flow. `@regression` covers the complete API suite.
 
 Debugging and reports:
 
